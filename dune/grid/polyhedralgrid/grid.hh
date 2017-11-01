@@ -861,7 +861,7 @@ namespace Dune
           }
         case 1:
           {
-            return 0;//grid_.cell_facepos[ index+1 ] - grid_.cell_facepos[ index ];
+            return grid_.face_nodepos[ index+1 ] - grid_.face_nodepos[ index ];
           }
         case dim:
           {

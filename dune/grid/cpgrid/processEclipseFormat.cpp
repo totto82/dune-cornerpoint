@@ -776,18 +776,6 @@ namespace cpgrid
             }
         };
 
-        // Specialization for intersections.
-        template <>
-        struct MakeGeometry<2>
-        {
-            cpgrid::Geometry<2, 3> operator()(const FieldVector<double, 3>& pos, double vol)
-            {
-                return cpgrid::Geometry<2, 3>(pos, vol);
-            }
-        };
-
-
-
         void buildGeom(const processed_grid& output,
                        const cpgrid::OrientedEntityTable<0, 1>& c2f,
                        const std::vector<array<int,8> >& c2p,
@@ -801,6 +789,7 @@ namespace cpgrid
             std::vector<point_t>& points = allcorners;
             std::vector<point_t> face_normals;
             std::vector<point_t> face_centroids;
+            std::vector<std::vector<int>> face_corners;
             std::vector<double>  face_areas;
             std::vector<point_t> cell_centroids;
             std::vector<double>  cell_volumes;
@@ -846,6 +835,11 @@ namespace cpgrid
                 face_normals.push_back(normal);
                 face_centroids.push_back(centroid);
                 face_areas.push_back(area);
+                std::vector<int> nodeIndicesOnFace;
+                for (int i = fp[output_face]; i < fp[output_face+1]; ++i) {
+                    nodeIndicesOnFace.push_back(fn[i]);
+                }
+                face_corners.push_back(nodeIndicesOnFace);
             }
 #ifdef VERBOSE
             std::cout << "Faces:              " << clock.secsSinceLast() << std::endl;
@@ -900,9 +894,6 @@ namespace cpgrid
             std::vector<cpgrid::Geometry<3, 3> > cg;
             cg.reserve(nc);
             MakeGeometry<3> mcellg(&allcorners[0]);
-//             std::transform(cell_centroids.begin(), cell_centroids.end(),
-//                            cell_volumes.begin(),
-//                            std::back_inserter(cg), mcellg);
             for (int c = 0;  c < nc; ++c) {
                 cg.push_back(mcellg(cell_centroids[c], cell_volumes[c], c2p[c]));
             }
@@ -910,10 +901,11 @@ namespace cpgrid
             // Faces
             cpgrid::EntityVariable<cpgrid::Geometry<2, 3>, 1> facegeom;
             std::vector<cpgrid::Geometry<2, 3> > fg;
-            MakeGeometry<2> mfaceg;
-            std::transform(face_centroids.begin(), face_centroids.end(),
-                           face_areas.begin(),
-                           std::back_inserter(fg), mfaceg);
+
+            for (int i = 0; i < face_areas.size(); ++i) {
+                auto geo = cpgrid::Geometry<2, 3>(face_centroids[i], face_areas[i], &allcorners[0], face_corners[i]);
+                fg.push_back ( geo );
+            }
             facegeom.assign(fg.begin(), fg.end());
             // Points
             cpgrid::EntityVariable<cpgrid::Geometry<0, 3>, 3> pointgeom;

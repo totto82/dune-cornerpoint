@@ -346,18 +346,42 @@ namespace Dune
             /// Type of the inverse of the transposed Jacobian matrix
             typedef FieldMatrix< ctype, coorddimension, mydimension >         JacobianInverseTransposed;
 
+
+            /// @brief Construct from centroid, volume (1- and 0-moments) and
+            ///        corners.
+            /// @param pos the centroid of the entity
+            /// @param vol the volume(area) of the entity
+            /// @param allcorners array of all corner positions in the grid
+            /// @param corner_indices array of 8 indices into allcorners array. The
+            ///                       indices must be given in lexicographical order
+            ///                       by (kji), i.e. i running fastest.
+            Geometry(const GlobalCoordinate& pos,
+                     ctype vol,
+                     const GlobalCoordinate* allcorners,
+                     const std::vector<int>& corner_indices)
+                : pos_(pos), vol_(vol), allcorners_(allcorners), cor_idx_(corner_indices)
+            {
+
+            }
+
             /// @brief Construct from centroid and volume (1- and 0-moments).
             /// @param pos the centroid of the entity
             /// @param vol the volume(area) of the entity
+            /// Note that since corners are not
+            ///        given, the geometry provides no mappings, and
+            ///        some calls (corner(), global() etc.) will fail.
+            ///        This possibly dangerous constructor is
+            ///        available for the benefit of
+            ///        CpGrid::readSintefLegacyFormat().
             Geometry(const GlobalCoordinate& pos,
                      ctype vol)
-                : pos_(pos), vol_(vol)
+                : pos_(pos), vol_(vol), allcorners_(0), cor_idx_(0)
             {
             }
 
             /// Default constructor, giving a non-valid geometry.
             Geometry()
-                : pos_(0.0), vol_(0.0)
+                : pos_(0.0), vol_(0.0), allcorners_(0), cor_idx_(0)
             {
             }
 
@@ -392,16 +416,14 @@ namespace Dune
             /// Since this geometry is singular, we have no corners as such.
             int corners() const
             {
-                return 0;
+                return cor_idx_.size();
             }
 
-            /// This method is meaningless for singular geometries.
-            GlobalCoordinate corner(int /* cor */) const
+            /// The corners of the intersection.
+            GlobalCoordinate corner(int cor) const
             {
-                // Meaningless call to cpgrid::Geometry::corner(int): 
-                //"singular geometry has no corners.
-                // But the DUNE tests assume at least one corner.
-                return GlobalCoordinate( 0.0 );
+                assert(allcorners_ && int(cor_idx_.size()) > cor );
+                return allcorners_[cor_idx_[cor]];
             }
 
             /// Volume (area, actually) of intersection.
@@ -439,6 +461,9 @@ namespace Dune
         private:
             GlobalCoordinate pos_;
             ctype vol_;
+            const GlobalCoordinate* allcorners_; // For dimension 3 only
+            std::vector<int> cor_idx_;              // For dimension 3 only
+
         };
 
 

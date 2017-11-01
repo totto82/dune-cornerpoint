@@ -91,6 +91,17 @@ void testGridIteration( const GridView& gridView )
                             << " volume is wrong: " << intersection.inside().geometry().volume() << std::endl;
 #endif
             }
+            // check intersection geometry
+            if (isGeom.corners() != 4) {
+                std::cout << "Expects 4 corners pr intersection. Gets : " << isGeom.corners() << std::endl;
+                std::abort();
+            }
+
+            // check that the first corner of the first intersection equals the first corner of the element.
+            if (localIdSet.id( intersection ) == 0 && isGeom.corner(0) != elemGeom.corner(0)) {
+                std::cout << "The first corner of the first intersection should be the same as the first corner of element, but it isn't  : " << isGeom.corner(0) << " " <<elemGeom.corner(0) << std::endl;
+                std::abort();
+            }
         }
 
         if (numIs != 6)
