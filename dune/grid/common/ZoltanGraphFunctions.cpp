@@ -290,7 +290,13 @@ void getCpGridWellsEdgeList(void *graphPointer, int sizeGID, int sizeLID,
                     if ( wellEdges.find(otherCell) == wellEdges.end() )
                     {
                         nborGID[idx] = globalID[otherCell];
-                        ewgts[idx++] = graph.transmissibility(face);
+                        if(~wellEdges.empty())
+                            ewgts[idx++] = std::numeric_limits<float>::max();
+                        else
+                            ewgts[idx++] = graph.transmissibility(face);
+
+
+
                     }
                     continue;
                 }
@@ -298,7 +304,10 @@ void getCpGridWellsEdgeList(void *graphPointer, int sizeGID, int sizeLID,
             if ( wellEdges.find(otherCell) == wellEdges.end() )
             {
                 nborGID[idx] = globalID[otherCell];
-                ewgts[idx++] = graph.transmissibility(face);
+                if(~wellEdges.empty())
+                    ewgts[idx++] = std::numeric_limits<float>::max();
+                else
+                    ewgts[idx++] = graph.transmissibility(face);
             }
         }
 #ifndef NDEBUG
