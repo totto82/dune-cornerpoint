@@ -46,8 +46,9 @@ namespace Dune
 
         int cartesianIndex( const int compressedElementIndex ) const
         {
-            assert( compressedElementIndex >= 0 && compressedElementIndex < compressedSize() );
-            return grid_.globalCell()[ compressedElementIndex ];
+            return compressedElementIndex;
+            //assert( compressedElementIndex >= 0 && compressedElementIndex < compressedSize() );
+            //return grid_.globalCell()[ compressedElementIndex ];
         }
 
         void cartesianCoordinate(const int compressedElementIndex, std::array<int,dimension>& coords) const

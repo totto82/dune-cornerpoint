@@ -104,9 +104,15 @@ namespace Dune
       insertElement( type, vertices );
     }
 
-    void insertBoundarySegment(const std::vector<unsigned int>&)
+    virtual void insertBoundarySegment(const std::vector<unsigned int>&)
     {
       DUNE_THROW(NotImplemented,"yet");
+    }
+
+    virtual void insertBoundarySegment(const std::vector<unsigned int>& vertices,
+                                       const std::shared_ptr<BoundarySegment<dimension,dimworld> >& boundarySegment)
+    {
+      DUNE_THROW(NotImplemented, "This grid does not support parametrized boundary segments!");
     }
 
     UniquePtrType createGrid()
@@ -126,6 +132,8 @@ namespace Dune
 
       typename Grid::UnstructuredGridPtr ug =
         Grid::allocateGrid( cells.size(), faces.size(), numFaceNodes, numCellFaces, nodes.size() );
+      size_t nel = cells.size() * dimensionworld;
+      ug->global_cell = (int *)malloc(nel * sizeof *ug->global_cell);
 
       // copy faces
       {
@@ -172,6 +180,7 @@ namespace Dune
         for( int cell = 0; cell < nCells; ++cell )
         {
           //std::cout << "Cell " << cell << ": ";
+          ug->global_cell[ cell ] = cell;
           ug->cell_facepos[ cell ] = cellpos;
           const int nFaces = cells[ cell ].size();
           for( int f = 0; f < nFaces; ++f, ++cellpos )
